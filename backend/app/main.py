@@ -2,13 +2,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from app.core.database import engine, Base
 from app.core.config import get_settings
 from app.api.routers import (
     auth_router, users_router, categories_router, entries_router,
     titles_router, user_entry_info_router, user_entry_router, results_router
 )
+from app.admin import register_admin
 import os
 
 settings = get_settings()
@@ -20,9 +21,9 @@ app = FastAPI(
     title="健康管理系统 API",
     description="物业管理健康评估系统 - 基于 FastAPI + React",
     version="1.0.0",
-    docs_url=None,  # 禁用默认 docs
-    redoc_url=None,  # 禁用默认 redoc
-    openapi_url="/api/openapi.json",  # 自定义 OpenAPI JSON 路径
+    docs_url=None,
+    redoc_url=None,
+    openapi_url="/api/openapi.json",
 )
 
 # 注册路由
@@ -44,10 +45,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 静态文件 (管理后台页面)
+# 静态文件
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+# 注册 SQLAdmin 管理后台
+register_admin(app, engine)
 
 # 自定义文档路由
 @app.get("/docs", include_in_schema=False)
@@ -73,15 +77,15 @@ async def get_openapi():
 
 @app.get("/")
 def root():
-    return {"message": "健康管理系统 API", "docs": "/docs", "redoc": "/redoc"}
+    return {"message": "健康管理系统 API", "docs": "/docs", "redoc": "/redoc", "admin": "/admin"}
 
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
 
-@app.get("/admin")
-def admin():
-    from fastapi.responses import FileResponse
+@app.get("/admin-page")
+def admin_page():
+    """管理后台页面"""
     admin_path = os.path.join(os.path.dirname(__file__), "static", "admin.html")
     if os.path.exists(admin_path):
         return FileResponse(admin_path)
