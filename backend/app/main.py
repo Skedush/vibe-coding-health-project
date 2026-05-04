@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine, Base
 from app.core.config import get_settings
-from app.api.routers import auth_router, users_router
+from app.api.routers import auth_router, users_router, categories_router, entries_router, user_entry_info_router, user_entry_router
 
 settings = get_settings()
 
@@ -18,6 +18,10 @@ app = FastAPI(
 # 注册路由
 app.include_router(auth_router)
 app.include_router(users_router)
+app.include_router(categories_router)
+app.include_router(entries_router)
+app.include_router(user_entry_info_router)
+app.include_router(user_entry_router)
 
 # CORS 配置
 app.add_middleware(
