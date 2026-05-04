@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine, Base
 from app.core.config import get_settings
+from app.api.routers import auth_router, users_router
 
 settings = get_settings()
 
@@ -13,6 +14,10 @@ app = FastAPI(
     description="物业管理健康评估系统",
     version="1.0.0"
 )
+
+# 注册路由
+app.include_router(auth_router)
+app.include_router(users_router)
 
 # CORS 配置
 app.add_middleware(
