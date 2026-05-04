@@ -15,6 +15,7 @@ class CategoryCreate(CategoryBase):
 class CategoryResponse(CategoryBase):
     id: int
     show_count: int
+    is_delete: bool = False
     created: datetime
     updated: datetime
 

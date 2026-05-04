@@ -12,6 +12,7 @@ class EntryInfoCreate(EntryInfoBase):
 
 class EntryInfoResponse(EntryInfoBase):
     id: int
+    is_delete: bool = False
     created: datetime
     updated: datetime
 
@@ -40,6 +41,7 @@ class UserEntryCreate(UserEntryBase):
 
 class UserEntryResponse(UserEntryBase):
     id: int
+    is_delete: bool = False
     created: datetime
     updated: datetime
 

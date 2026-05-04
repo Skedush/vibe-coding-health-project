@@ -13,6 +13,7 @@ class EntryCreate(EntryBase):
 
 class EntryResponse(EntryBase):
     id: int
+    is_delete: bool = False
     created: datetime
     updated: datetime
 

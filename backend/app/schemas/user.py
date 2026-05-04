@@ -21,6 +21,7 @@ class UserResponse(UserBase):
     is_active: bool
     is_title: bool
     is_vip: bool
+    is_delete: bool = False
     date_joined: datetime
 
     class Config:
