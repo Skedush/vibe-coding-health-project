@@ -13,6 +13,7 @@ class User(Base):
     phone = Column(String(11))
     gender = Column(String(2), default="1")
     is_active = Column(Boolean, default=False)
+    is_staff = Column(Boolean, default=False)
     is_title = Column(Boolean, default=False)
     is_vip = Column(Boolean, default=False)
     is_delete = Column(Boolean, default=False)
