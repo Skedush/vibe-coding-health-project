@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { List, Tabs, Button, Input, Modal, message, Checkbox, Affix } from 'antd'
+import { PageContainer } from '@/components/PageContainer'
 import { DeleteOutlined, EyeOutlined, LinkOutlined } from '@ant-design/icons'
 import { useEntryInfoList, useUserEntryList, useDeleteUserEntry } from '@/api/request'
 import { useAuthStore } from '@/stores/authStore'
@@ -110,7 +111,8 @@ export default function Home() {
   }
 
   return (
-    <div>
+    <PageContainer>
+      <div>
       {isStaff && (
         <div className="mb-4">
           {entryInfoList.map((item: EntryInfo) => (
@@ -211,12 +213,13 @@ export default function Home() {
       )}
 
       {isStaff && selectedEntryInfo && (
-        <Affix className="fixed bottom-6 right-6">
+        <Affix className="fixed bottom-4 right-4 md:bottom-6 md:right-6">
           <Button type="primary" onClick={handleCompare}>
             {compareMode ? '取消对比' : '对比'}
           </Button>
         </Affix>
       )}
     </div>
+    </PageContainer>
   )
 }
