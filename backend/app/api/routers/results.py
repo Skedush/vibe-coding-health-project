@@ -6,7 +6,7 @@ from app.models.entry import Entry
 from app.models.category import Category
 from app.api.deps import get_current_user
 from app.models.user import User
-from app.schemas.result import ResultResponse, ResultInfo, EntrySimple, EntryNested, CategorySimple, ResultGroupsResponse, EntryGroupResponse, CategoryForGroup, EntryForGroup
+from app.schemas.result import ResultResponse, ResultInfo, EntrySimple, EntryNested, CategorySimple, ResultGroupsResponse, EntryGroupResponse, CategoryForGroup, EntryForGroup, ResultCompareResponse
 
 router = APIRouter(prefix="/result", tags=["结果"])
 
@@ -254,3 +254,46 @@ def get_result_groups(
         groups.append(EntryGroupResponse(**group_data))
 
     return ResultGroupsResponse(groups=groups)
+
+
+@router.get("/{user_entry_id}/compare", response_model=ResultCompareResponse)
+def get_result_compare(
+    user_entry_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    获取用户健康记录（Compare 页面用）
+    返回基础信息 + 顶级 entry_ids 列表
+    """
+    from sqlalchemy.orm import selectinload
+
+    user_entry = db.query(UserEntry).options(
+        selectinload(UserEntry.entries),
+    ).filter(
+        UserEntry.id == user_entry_id,
+        UserEntry.is_delete == False
+    ).first()
+
+    if not user_entry:
+        raise HTTPException(status_code=404, detail="UserEntry not found")
+
+    # 获取顶级 entryship id 列表（不包含嵌套的 entrys）
+    entry_ids = [entry.id for entry in user_entry.entries if not entry.is_delete]
+
+    return ResultCompareResponse(
+        id=user_entry.id,
+        name=user_entry.name or "",
+        gender=user_entry.gender or "1",
+        age=user_entry.age,
+        height=user_entry.height,
+        weight=user_entry.weight,
+        waistline=user_entry.waistline,
+        systolic_pressure=user_entry.systolic_pressure,
+        diastolic_pressure=user_entry.diastolic_pressure,
+        blood_sugar=user_entry.blood_sugar,
+        phone=user_entry.phone,
+        created=user_entry.created,
+        remark=user_entry.remark,
+        entry_ids=entry_ids,
+    )
