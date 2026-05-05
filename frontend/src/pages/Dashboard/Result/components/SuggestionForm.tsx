@@ -1,12 +1,12 @@
 import { Card, Form, Input, Button } from 'antd'
 import { useMutation } from '@tanstack/react-query'
 import { API } from '@/api/request'
-import type { HealthResult } from '@/types/api'
+import type { ResultInfo } from '@/types/api'
 
 const { TextArea } = Input
 
 interface SuggestionFormProps {
-  result: HealthResult
+  result: ResultInfo
   onSuccess: () => void
 }
 

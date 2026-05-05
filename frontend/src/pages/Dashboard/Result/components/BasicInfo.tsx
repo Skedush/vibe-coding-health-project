@@ -1,8 +1,8 @@
 import { Card, Descriptions } from 'antd'
-import type { HealthResult } from '@/types/api'
+import type { ResultInfo } from '@/types/api'
 
 interface BasicInfoProps {
-  result: HealthResult
+  result: ResultInfo
   isStaff?: boolean
 }
 
