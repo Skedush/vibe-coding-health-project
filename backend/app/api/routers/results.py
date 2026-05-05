@@ -6,7 +6,7 @@ from app.models.entry import Entry
 from app.models.category import Category
 from app.api.deps import get_current_user
 from app.models.user import User
-from app.schemas.result import ResultResponse, ResultInfo, EntrySimple, EntryNested, CategorySimple
+from app.schemas.result import ResultResponse, ResultInfo, EntrySimple, EntryNested, CategorySimple, ResultGroupsResponse, EntryGroupResponse, CategoryForGroup, EntryForGroup
 
 router = APIRouter(prefix="/result", tags=["结果"])
 
@@ -153,3 +153,104 @@ def get_result_info(
         remark=user_entry.remark,
         suggestion=user_entry.suggestion,
     )
+
+
+@router.get("/{user_entry_id}/groups", response_model=ResultGroupsResponse)
+def get_result_groups(
+    user_entry_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    获取用户健康记录分组症状
+    实现前端现有的 entryGroups 分组逻辑
+    """
+    from sqlalchemy.orm import selectinload
+    from typing import Dict, Any
+
+    user_entry = db.query(UserEntry).options(
+        selectinload(UserEntry.entries).joinedload(Entry.category),
+        selectinload(UserEntry.entries).selectinload(Entry.entrys).joinedload(Entry.category),
+    ).filter(
+        UserEntry.id == user_entry_id,
+        UserEntry.is_delete == False
+    ).first()
+
+    if not user_entry:
+        raise HTTPException(status_code=404, detail="UserEntry not found")
+
+    # 分组逻辑（必须与前端完全一致）
+    groups_map: Dict[int, Dict[str, Any]] = {}
+
+    for entry in user_entry.entries:
+        if entry.is_delete:
+            continue
+
+        # 1. 处理顶级条目 - 按 category 分组，顶级条目 number=None
+        cat_id = entry.category_id
+        if cat_id not in groups_map:
+            groups_map[cat_id] = {
+                "category": {
+                    "id": entry.category.id,
+                    "name": entry.category.name,
+                    "link": entry.category.link,
+                    "child_link": entry.category.child_link,
+                    "protocol": getattr(entry.category, 'protocol', 'https://'),
+                    "show_count": getattr(entry.category, 'show_count', 0),
+                },
+                "entrys": []
+            }
+        # 顶级条目不设置 number
+        groups_map[cat_id]["entrys"].append({
+            "id": entry.id,
+            "title": entry.title or "",
+            "number": None
+        })
+
+        # 2. 处理嵌套 entrys - 按嵌套条目的 category 分组，number 累加
+        if hasattr(entry, 'entrys') and entry.entrys:
+            for nested in entry.entrys:
+                if nested.is_delete:
+                    continue
+
+                nested_cat_id = nested.category_id
+                if nested_cat_id not in groups_map:
+                    groups_map[nested_cat_id] = {
+                        "category": {
+                            "id": nested.category.id,
+                            "name": nested.category.name,
+                            "link": nested.category.link,
+                            "child_link": nested.category.child_link,
+                            "protocol": getattr(nested.category, 'protocol', 'https://'),
+                            "show_count": getattr(nested.category, 'show_count', 0),
+                        },
+                        "entrys": []
+                    }
+
+                # 检查是否已存在该 entry，number 累加
+                existing_entry = None
+                for e in groups_map[nested_cat_id]["entrys"]:
+                    if e["id"] == nested.id:
+                        existing_entry = e
+                        break
+
+                if existing_entry:
+                    existing_entry["number"] = (existing_entry["number"] or 0) + 1
+                else:
+                    groups_map[nested_cat_id]["entrys"].append({
+                        "id": nested.id,
+                        "title": nested.title or "",
+                        "number": 1
+                    })
+
+    # 3. 转换为响应格式，每组内按 number 降序排序
+    groups = []
+    for group_data in groups_map.values():
+        # 排序：number 为 None 的排最后，其余按 number 降序
+        group_data["entrys"].sort(
+            key=lambda x: (x["number"] if x["number"] is not None else -1),
+            reverse=True
+        )
+        groups.append(EntryGroupResponse(**group_data))
+
+    return ResultGroupsResponse(groups=groups)
