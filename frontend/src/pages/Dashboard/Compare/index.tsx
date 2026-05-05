@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { Card, Spin, Descriptions, Button, Modal, Tag, Tooltip, message } from 'antd'
-import { useResult, useEntryInfoDetail } from '@/api/request'
+import { useResultCompare, useEntryInfoDetail } from '@/api/request'
 import { useAuthStore } from '@/stores/authStore'
 import domtoimage from 'dom-to-image'
 import type { Entry } from '@/types/api'
@@ -13,27 +13,16 @@ export default function Compare() {
   const resultRef = useRef<HTMLDivElement>(null)
 
   const { data: entryInfo, isLoading: entryInfoLoading } = useEntryInfoDetail(Number(id))
-  const { data: result1, isLoading: loading1 } = useResult(Number(oneId))
-  const { data: result2, isLoading: loading2 } = useResult(Number(twoId))
+  const { data: compare1, isLoading: loading1 } = useResultCompare(Number(oneId))
+  const { data: compare2, isLoading: loading2 } = useResultCompare(Number(twoId))
 
   const [imgModalVisible, setImgModalVisible] = useState(false)
   const [picture, setPicture] = useState('')
 
   const isLoading = entryInfoLoading || loading1 || loading2
 
-  // 从 result 获取用户选择的条目 ID 列表（只取顶层的 entryship）
-  const getSelectedIds = (result: typeof result1): number[] => {
-    const ids: number[] = []
-    if (!result?.entryship) return ids
-    // 只取顶层的 entryship 的 id，不递归获取嵌套的 entrys
-    result.entryship.forEach((item) => {
-      ids.push(item.id)
-    })
-    return ids
-  }
-
-  const perIds = getSelectedIds(result1)
-  const thisIds = getSelectedIds(result2)
+  const perIds = compare1?.entry_ids || []
+  const thisIds = compare2?.entry_ids || []
 
   // 获取卡片样式类名
   const getCardGridClassName = (entryId: number) => {
@@ -65,8 +54,8 @@ export default function Compare() {
     return <Spin tip="请求数据中，稍等3-10秒..." />
   }
 
-  const perCommit = result1
-  const thisCommit = result2
+  const perCommit = compare1
+  const thisCommit = compare2
 
   // 所有条目模板来自 entryInfo.entrys
   const allEntrys: Entry[] = entryInfo?.entrys || []
