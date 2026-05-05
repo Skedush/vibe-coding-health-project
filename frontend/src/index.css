@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 确保移动端触摸友好 */
+@media (max-width: 640px) {
+  .ant-btn {
+    height: 36px;
+    padding: 0 12px;
+  }
+}
