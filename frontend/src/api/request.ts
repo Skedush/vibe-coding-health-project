@@ -57,6 +57,14 @@ const API = Object.fromEntries(
 
 export { API }
 
+// 工厂函数 - 简化 mutation hook 创建
+const createMutationHook =
+  <TData, TVariables>(
+    mutationFn: (data: TVariables) => Promise<TData>
+  ) =>
+  () =>
+    useMutation<TData, Error, TVariables>({ mutationFn })
+
 // Query hooks - 全部用箭头函数包装，避免 React Query 传递 QueryOptions
 export const useLogin = () =>
   useMutation<TokenResponse, Error, LoginData>({ mutationFn: (data) => API.login(data) })
