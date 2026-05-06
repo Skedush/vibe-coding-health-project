@@ -66,13 +66,16 @@ const createMutationHook =
     useMutation<TData, Error, TVariables>({ mutationFn })
 
 // 工厂函数 - 简化 query hook 创建
+// 注意：params 必须有默认值以支持无参数调用
 const createQueryHook =
-  <TData>(queryFn: () => Promise<TData>, queryKey: string[]) =>
-  (enabled = true) =>
+  <TData, TParams extends object = {}>(
+    queryFn: (params: TParams) => Promise<TData>,
+    queryKey: string[]
+  ) =>
+  (params: TParams = {} as TParams) =>
     useQuery<TData, Error>({
-      queryKey,
-      queryFn,
-      enabled,
+      queryKey: [...queryKey, JSON.stringify(params)],
+      queryFn: () => queryFn(params),
     })
 
 // Query hooks - 全部用箭头函数包装，避免 React Query 传递 QueryOptions
@@ -80,16 +83,13 @@ export const useLogin = createMutationHook(API.login)
 
 export const useRegister = createMutationHook(API.register)
 
-export const useCurrentUser = () =>
-  useQuery<User, Error>({ queryKey: ['currentUser'], queryFn: () => API.getCurrentUser() })
+export const useCurrentUser = createQueryHook(API.getCurrentUser, ['currentUser'])
 
 export const useUpdateUser = createMutationHook(API.updateCurrentUser)
 
-export const useCategories = () =>
-  useQuery<Category[], Error>({ queryKey: ['categories'], queryFn: () => API.getCategories() })
+export const useCategories = createQueryHook(API.getCategories, ['categories'])
 
-export const useEntries = () =>
-  useQuery<Entry[], Error>({ queryKey: ['entries'], queryFn: () => API.getEntries() })
+export const useEntries = createQueryHook(API.getEntries, ['entries'])
 
 export const useEntry = (id: number) =>
   useQuery<Entry, Error>({
@@ -98,8 +98,7 @@ export const useEntry = (id: number) =>
     enabled: Boolean(id),
   })
 
-export const useTitles = () =>
-  useQuery<Title[], Error>({ queryKey: ['titles'], queryFn: () => API.getTitles() })
+export const useTitles = createQueryHook(API.getTitles, ['titles'])
 
 export const useTitle = (id: number) =>
   useQuery<Title, Error>({
@@ -110,8 +109,7 @@ export const useTitle = (id: number) =>
 
 export const useUpdateTitle = createMutationHook(API.updateTitle)
 
-export const useEntryInfoList = () =>
-  useQuery<EntryInfo[], Error>({ queryKey: ['entryInfoList'], queryFn: () => API.getEntryInfoList() })
+export const useEntryInfoList = createQueryHook(API.getEntryInfoList, ['entryInfoList'])
 
 export const useEntryInfoDetail = (id: number) =>
   useQuery<EntryInfo, Error>({
