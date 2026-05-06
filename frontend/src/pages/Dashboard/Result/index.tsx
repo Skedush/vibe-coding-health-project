@@ -9,7 +9,7 @@ import { SuggestionForm } from './components/SuggestionForm'
 import { SymptomCard } from './components/SymptomCard'
 import { PieChart } from './components/PieChart'
 import { GraphChart } from './components/GraphChart'
-import type { ResultInfo, ResultGroups, EntryGroup } from '@/types/api'
+import type { EntryGroup } from '@/types/api'
 import domtoimage from 'dom-to-image'
 
 export default function Result() {

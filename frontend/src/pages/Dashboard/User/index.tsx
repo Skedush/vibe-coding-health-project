@@ -8,7 +8,7 @@ export default function User() {
 
   const onPasswordSubmit = async (values: { password: string }) => {
     try {
-      await updateMutation.mutateAsync(values)
+      await updateMutation.mutateAsync(values as any)
       message.success('密码修改成功')
       form.resetFields()
     } catch {

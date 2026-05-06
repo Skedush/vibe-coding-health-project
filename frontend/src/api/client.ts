@@ -132,9 +132,12 @@ export async function request<T = any>(options: RequestOptions): Promise<T> {
   // GET 请求处理 query 参数
   if (method.toLowerCase() === 'get' && Object.keys(cloneData).length > 0) {
     // 过滤掉 undefined 和 null 值
-    const filteredData = Object.fromEntries(
-      Object.entries(cloneData).filter(([_, v]) => v !== undefined && v !== null)
-    )
+    const filteredData: Record<string, string> = {}
+    Object.entries(cloneData).forEach(([k, v]) => {
+      if (v !== undefined && v !== null) {
+        filteredData[k] = String(v)
+      }
+    })
     if (Object.keys(filteredData).length > 0) {
       finalUrl = `${finalUrl}?${new URLSearchParams(filteredData).toString()}`
     }

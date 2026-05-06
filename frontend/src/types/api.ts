@@ -61,6 +61,7 @@ export interface EntryInfo {
   title_id?: number
   title_name?: string
   category_name?: string
+  category?: Category
   title?: Title
   entrys?: Entry[]
   created?: string
@@ -182,6 +183,7 @@ export interface EntryGroup {
 
 export interface ResultGroups {
   groups: EntryGroup[]
+  graph?: GraphData
 }
 
 // ========== Graph Data ==========
