@@ -76,17 +76,14 @@ const createQueryHook =
     })
 
 // Query hooks - 全部用箭头函数包装，避免 React Query 传递 QueryOptions
-export const useLogin = () =>
-  useMutation<TokenResponse, Error, LoginData>({ mutationFn: (data) => API.login(data) })
+export const useLogin = createMutationHook(API.login)
 
-export const useRegister = () =>
-  useMutation<User, Error, RegisterData>({ mutationFn: (data) => API.register(data) })
+export const useRegister = createMutationHook(API.register)
 
 export const useCurrentUser = () =>
   useQuery<User, Error>({ queryKey: ['currentUser'], queryFn: () => API.getCurrentUser() })
 
-export const useUpdateUser = () =>
-  useMutation<User, Error, Partial<User>>({ mutationFn: (data) => API.updateCurrentUser(data) })
+export const useUpdateUser = createMutationHook(API.updateCurrentUser)
 
 export const useCategories = () =>
   useQuery<Category[], Error>({ queryKey: ['categories'], queryFn: () => API.getCategories() })
@@ -111,8 +108,7 @@ export const useTitle = (id: number) =>
     enabled: Boolean(id),
   })
 
-export const useUpdateTitle = () =>
-  useMutation<Title, Error, { id: number } & Partial<Title>>({ mutationFn: (data) => API.updateTitle(data) })
+export const useUpdateTitle = createMutationHook(API.updateTitle)
 
 export const useEntryInfoList = () =>
   useQuery<EntryInfo[], Error>({ queryKey: ['entryInfoList'], queryFn: () => API.getEntryInfoList() })
@@ -138,16 +134,11 @@ export const useUserEntry = (id: number) =>
     enabled: Boolean(id),
   })
 
-export const useAddUserEntry = () =>
-  useMutation<UserEntry, Error, Partial<UserEntry>>({ mutationFn: (data) => API.addUserEntry(data) })
+export const useAddUserEntry = createMutationHook(API.addUserEntry)
 
-export const useUpdateUserEntry = () =>
-  useMutation<UserEntry, Error, { id: number } & Partial<UserEntry>>({
-    mutationFn: (data) => API.updateUserEntry(data),
-  })
+export const useUpdateUserEntry = createMutationHook(API.updateUserEntry)
 
-export const useDeleteUserEntry = () =>
-  useMutation<void, Error, number>({ mutationFn: (id) => API.deleteUserEntry({ id }) })
+export const useDeleteUserEntry = createMutationHook((id: number) => API.deleteUserEntry({ id }))
 
 export const useResult = (id: number) =>
   useQuery<HealthResult, Error>({
