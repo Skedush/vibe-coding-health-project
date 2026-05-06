@@ -1,12 +1,8 @@
-import { Form, Input } from 'antd'
+import { Form, Input, Radio } from 'antd'
 
 const { TextArea } = Input
 
-interface Props {
-  form: ReturnType<typeof Form.useForm>[0]
-}
-
-export const BasicFields = ({ form }: Props) => {
+export const BasicFields = () => {
   return (
     <>
       <Form.Item
@@ -34,9 +30,10 @@ export const BasicFields = ({ form }: Props) => {
         label="性别"
         rules={[{ required: true, message: '请选择性别' }]}
       >
-        <Form.Item name="gender" noStyle>
-          <Input placeholder="性别" />
-        </Form.Item>
+        <Radio.Group>
+          <Radio value="1">男</Radio>
+          <Radio value="0">女</Radio>
+        </Radio.Group>
       </Form.Item>
     </>
   )

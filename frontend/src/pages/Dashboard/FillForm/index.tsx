@@ -7,15 +7,15 @@ import {
   Card,
   message,
   Spin,
-  Radio,
-  Checkbox,
-  Tree,
   Alert,
 } from 'antd'
 import { useEntryInfoDetail, useAddUserEntry } from '@/api/request'
 import { PageContainer } from '@/components/PageContainer'
 import { PageTitle } from '@/components/PageTitle'
 import type { Entry } from '@/types/api'
+import { BasicFields } from './components/BasicFields'
+import { MedicalFields } from './components/MedicalFields'
+import { SymptomSelector } from './components/SymptomSelector'
 
 const { TextArea } = Input
 
@@ -163,118 +163,20 @@ export default function FillForm() {
           initialValues={{ gender: '1' }}
         >
           {/* 基础信息 */}
-          <Form.Item
-            name="name"
-            label="姓名"
-            rules={[{ required: true, message: '请输入姓名' }]}
-          >
-            <Input placeholder="姓名.必填" maxLength={50} />
-          </Form.Item>
+          <BasicFields />
 
-          <Form.Item
-            name="phone"
-            label="ID"
-            rules={[{ required: true, message: '请输入ID' }]}
-          >
-            <Input placeholder="ID.必填" maxLength={50} />
-          </Form.Item>
+          {/* 医学指标 */}
+          <MedicalFields />
 
-          <Form.Item name="address" label="地址">
-            <TextArea placeholder="地址" rows={2} />
-          </Form.Item>
-
-          {/* 性别 */}
-          <Form.Item
-            name="gender"
-            label="性别"
-            rules={[{ required: true, message: '请选择性别' }]}
-          >
-            <Radio.Group>
-              <Radio value="1">男</Radio>
-              <Radio value="0">女</Radio>
-            </Radio.Group>
-          </Form.Item>
-
-          {/* 基础指标 */}
-          <div className="flex flex-wrap gap-4">
-            <Form.Item name="age" label="年龄" className="flex-1 min-w-[45%]">
-              <Input placeholder="年龄" />
-            </Form.Item>
-
-            <Form.Item name="height" label="身高" className="flex-1 min-w-[45%]">
-              <Input placeholder="身高cm" suffix="cm" />
-            </Form.Item>
-
-            <Form.Item name="weight" label="体重" className="flex-1 min-w-[45%]">
-              <Input placeholder="体重kg" suffix="kg" />
-            </Form.Item>
-
-            <Form.Item name="waistline" label="腰围" className="flex-1 min-w-[45%]">
-              <Input placeholder="腰围cm" suffix="cm" />
-            </Form.Item>
-
-            <Form.Item name="systolic_pressure" label="收缩压" className="flex-1 min-w-[45%]">
-              <Input placeholder="收缩压mmHg" suffix="mmHg" />
-            </Form.Item>
-
-            <Form.Item name="diastolic_pressure" label="舒张压" className="flex-1 min-w-[45%]">
-              <Input placeholder="舒张压mmHg" suffix="mmHg" />
-            </Form.Item>
-
-            <Form.Item name="blood_sugar" label="血糖" className="flex-1 min-w-[45%]">
-              <Input placeholder="血糖mmol/L" suffix="mmol/L" />
-            </Form.Item>
-          </div>
-
-          {/* category === 3: checkbox 列表形式 */}
-          {category === 3 && checkList.length > 0 && (
-            <Form.Item
-              label="症状"
-              required
-              validateStatus={entryIds.length === 0 ? 'error' : ''}
-              help={entryIds.length === 0 ? '请选择症状' : ''}
-            >
-              <Checkbox.Group
-                value={entryIds}
-                onChange={(checkedValues) => handleCheckedChange(checkedValues as number[])}
-              >
-                {checkList.map((item) => (
-                  <div key={item.id}>
-                    <Checkbox value={item.id}>{item.title}</Checkbox>
-                  </div>
-                ))}
-              </Checkbox.Group>
-            </Form.Item>
-          )}
-
-          {/* category === 6: 树形结构形式 */}
-          {category === 6 && collectionList.length > 0 && (
-            <Form.Item
-              label="症状"
-              required
-              validateStatus={entryIds.length === 0 ? 'error' : ''}
-              help={entryIds.length === 0 ? '请选择症状' : ''}
-            >
-              <Tree
-                checkable
-                defaultExpandAll
-                checkedKeys={entryIds}
-                onCheck={(checked) => {
-                  if (Array.isArray(checked)) {
-                    handleNodeCheck(checked)
-                  }
-                }}
-                treeData={collectionList.map((group) => ({
-                  title: group.title,
-                  key: group.title,
-                  children: group.checkList.map((item) => ({
-                    title: item.title,
-                    key: item.id,
-                  })),
-                }))}
-              />
-            </Form.Item>
-          )}
+          {/* 症状选择 */}
+          <SymptomSelector
+            category={category}
+            checkList={checkList}
+            collectionList={collectionList}
+            entryIds={entryIds}
+            onCheckedChange={handleCheckedChange}
+            onNodeCheck={handleNodeCheck}
+          />
 
           {/* 症状数量提示 */}
           <Form.Item>
@@ -300,7 +202,7 @@ export default function FillForm() {
           </Form.Item>
         </Form>
       </Spin>
-    </Card>
+      </Card>
     </PageContainer>
   )
 }
