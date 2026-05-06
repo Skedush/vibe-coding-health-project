@@ -122,7 +122,7 @@ export default function Result() {
         bodyStyle={{ height: '70vh' }}
         centered
       >
-        <GraphChart data={resultGroups?.groups || []} />
+        <GraphChart data={resultGroups?.groups || []} graphData={resultGroups?.graph} />
       </Modal>
 
       {/* 图片弹窗 */}
