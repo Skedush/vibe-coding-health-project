@@ -66,7 +66,7 @@ client.interceptors.response.use(
       useAuthStore.getState().logout()
       window.location.href = '/login'
     }
-    const msg = (error.response?.data as any)?.detail || error.message
+    const msg = (error.response?.data as ApiErrorResponse)?.detail || error.message
     message.error(msg || '请求失败')
     return Promise.reject(error)
   }
