@@ -1,5 +1,10 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios'
 import { message } from 'antd'
+
+interface ApiErrorResponse {
+  detail?: string
+  message?: string
+}
 import { useAuthStore } from '@/stores/authStore'
 import { parse, compile } from 'path-to-regexp'
 
