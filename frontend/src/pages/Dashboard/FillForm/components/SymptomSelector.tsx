@@ -24,7 +24,7 @@ export const SymptomSelector = ({
   onCheckedChange,
   onNodeCheck,
 }: Props) => {
-  // category === CATEGORY_TYPE.CHECKBOX_LIST: checkbox 列表形式（虚拟滚动）
+  // category === CATEGORY_TYPE.CHECKBOX_LIST: checkbox 列表形式
   if (category === CATEGORY_TYPE.CHECKBOX_LIST && checkList.length > 0) {
     return (
       <Form.Item
@@ -37,35 +37,11 @@ export const SymptomSelector = ({
           value={entryIds}
           onChange={(checkedValues) => onCheckedChange(checkedValues as number[])}
         >
-          <div
-            style={{
-              height: Math.min(checkList.length * 32, 300),
-              overflow: 'auto',
-            }}
-          >
-            <div
-              style={{
-                height: `${checkList.length * 32}px`,
-                position: 'relative',
-              }}
-            >
-              {checkList.map((item, index) => (
-                <div
-                  key={item.id}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '32px',
-                    transform: `translateY(${index * 32}px)`,
-                  }}
-                >
-                  <Checkbox value={item.id}>{item.title}</Checkbox>
-                </div>
-              ))}
+          {checkList.map((item) => (
+            <div key={item.id}>
+              <Checkbox value={item.id}>{item.title}</Checkbox>
             </div>
-          </div>
+          ))}
         </Checkbox.Group>
       </Form.Item>
     )
