@@ -143,25 +143,21 @@ export async function request<T = any>(options: RequestOptions): Promise<T> {
     }
   }
 
-  try {
-    const response = await client({
-      url: finalUrl,
-      method,
-      data: method.toLowerCase() !== 'get' ? cloneData : undefined,
-      ...rest,
-    })
+  const response = await client({
+    url: finalUrl,
+    method,
+    data: method.toLowerCase() !== 'get' ? cloneData : undefined,
+    ...rest,
+  })
 
-    const responseData = response.data
+  const responseData = response.data
 
-    // 自动成功消息
-    if (autoMessage) {
-      messageWithCRUDUrl(finalUrl)
-    }
-
-    return responseData
-  } catch (error) {
-    throw error
+  // 自动成功消息
+  if (autoMessage) {
+    messageWithCRUDUrl(finalUrl)
   }
+
+  return responseData
 }
 
 export default client
