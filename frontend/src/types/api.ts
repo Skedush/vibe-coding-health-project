@@ -229,3 +229,19 @@ export interface ResultCompare {
   remark?: string
   entry_ids: number[]
 }
+
+// 常量
+export const CATEGORY_TYPE = {
+  TREE_STRUCTURE: 6,
+  CHECKBOX_LIST: 3,
+} as const
+
+export type EntryCategory = (typeof CATEGORY_TYPE)[keyof typeof CATEGORY_TYPE]
+
+// 工具类型
+export type ApiResult<T> = {
+  code?: string
+  message?: string
+  success?: boolean
+  data?: T
+}
