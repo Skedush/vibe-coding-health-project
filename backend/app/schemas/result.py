@@ -45,6 +45,7 @@ class EntryForGroup(BaseModel):
     """分组用的 entry 简化版"""
     id: int
     title: str
+    remark: Optional[str] = None  # 跳转 URL
     number: Optional[int] = None  # None 表示顶级条目，不参与过滤
 
     class Config:
@@ -63,6 +64,7 @@ class EntryGroupResponse(BaseModel):
 class ResultGroupsResponse(BaseModel):
     """分组症状列表"""
     groups: List[EntryGroupResponse]
+    graph: Optional[GraphDataResponse] = None  # 新增
 
     class Config:
         from_attributes = True
@@ -86,6 +88,27 @@ class ResultCompareResponse(BaseModel):
     created: datetime
     remark: Optional[str] = None
     entry_ids: List[int]  # 顶级 entryship id 列表
+
+    class Config:
+        from_attributes = True
+
+
+class GraphLinkResponse(BaseModel):
+    """力导向图 links"""
+    source: str
+    target: str
+    label: dict = {"show": False}
+    ignoreForceLayout: bool = True
+
+    class Config:
+        from_attributes = True
+
+
+class GraphDataResponse(BaseModel):
+    """力导向图数据结构"""
+    nodes: List[dict]
+    links: List[GraphLinkResponse]
+    categories: List[dict]
 
     class Config:
         from_attributes = True
