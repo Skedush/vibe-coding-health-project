@@ -65,6 +65,16 @@ const createMutationHook =
   () =>
     useMutation<TData, Error, TVariables>({ mutationFn })
 
+// 工厂函数 - 简化 query hook 创建
+const createQueryHook =
+  <TData>(queryFn: () => Promise<TData>, queryKey: string[]) =>
+  (enabled = true) =>
+    useQuery<TData, Error>({
+      queryKey,
+      queryFn,
+      enabled,
+    })
+
 // Query hooks - 全部用箭头函数包装，避免 React Query 传递 QueryOptions
 export const useLogin = () =>
   useMutation<TokenResponse, Error, LoginData>({ mutationFn: (data) => API.login(data) })
