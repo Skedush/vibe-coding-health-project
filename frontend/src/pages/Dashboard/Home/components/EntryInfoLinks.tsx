@@ -1,4 +1,4 @@
-import { Button, Message } from 'antd'
+import { Button, message } from 'antd'
 import { LinkOutlined } from '@ant-design/icons'
 import type { EntryInfo } from '@/types/api'
 
