@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Tabs, Button, Input, Modal, message, Affix } from 'antd'
 import { PageContainer } from '@/components/PageContainer'
-import { useEntryInfoList, useUserEntryList, useDeleteUserEntry } from '@/api/request'
+import { useEntryInfoList, useDeleteUserEntry } from '@/api/request'
+import { useEntryList } from '@/hooks'
 import { useQueryClient } from '@tanstack/react-query'
 import type { EntryInfo } from '@/types/api'
 import { EntryInfoLinks } from './components/EntryInfoLinks'
@@ -21,10 +22,7 @@ export default function Home() {
   const [checkedList, setCheckedList] = useState<string[]>([])
 
   const { data: entryInfoList = [] } = useEntryInfoList()
-  const { data: userEntryList, isLoading } = useUserEntryList({
-    entry_info: selectedEntryInfo ? Number(selectedEntryInfo) : undefined,
-    search: searchParams.search,
-  })
+  const { data: userEntryList, isLoading } = useEntryList(selectedEntryInfo, searchParams.search)
   const deleteMutation = useDeleteUserEntry()
 
   const { isStaff, canDelete } = usePermission()
