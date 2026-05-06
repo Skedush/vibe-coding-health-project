@@ -148,7 +148,11 @@ def get_result_groups(
 
     # 4. 构建力导向图数据
     graph_nodes = []
+    graph_links = []
     graph_categories = []
+
+    # 构建 node_id 集合，用于判断 link 的 target 是否有效
+    valid_node_ids = set()
 
     for group_index, group_data in enumerate(groups_map.values()):
         category = group_data["category"]
@@ -179,10 +183,28 @@ def get_result_groups(
                     "value": entry["number"] or "",
                     "symbolSize": symbol_size,
                 })
+                valid_node_ids.add(entry["id"])
+
+    # 5. 构建 links - 从原始 user_entry.entries 获取嵌套关系
+    for entry in user_entry.entries:
+        if entry.is_delete:
+            continue
+        if hasattr(entry, 'entrys') and entry.entrys:
+            for nested in entry.entrys:
+                if nested.is_delete:
+                    continue
+                # 只有当 source 和 target 都在 valid_node_ids 中时才添加 link
+                if entry.id in valid_node_ids and nested.id in valid_node_ids:
+                    graph_links.append({
+                        "source": str(entry.id),
+                        "target": str(nested.id),
+                        "label": {"show": False},
+                        "ignoreForceLayout": True,
+                    })
 
     graph_data = GraphDataResponse(
         nodes=graph_nodes,
-        links=[],  # links 暂不处理，非关键数据
+        links=graph_links,
         categories=graph_categories,
     )
 
