@@ -13,6 +13,7 @@ import { useEntryInfoDetail, useAddUserEntry } from '@/api/request'
 import { PageContainer } from '@/components/PageContainer'
 import { PageTitle } from '@/components/PageTitle'
 import type { Entry } from '@/types/api'
+import { CATEGORY_TYPE } from '@/types/api'
 import { BasicFields } from './components/BasicFields'
 import { MedicalFields } from './components/MedicalFields'
 import { SymptomSelector } from './components/SymptomSelector'
@@ -46,8 +47,8 @@ export default function FillForm() {
       setTitle(entryInfoDetail.title_name || '')
       setCategory(entryInfoDetail.category_id || null)
 
-      // category === 6 是树形结构，需要按 title 分组
-      if (entryInfoDetail.category_id === 6 && entryInfoDetail.entrys) {
+      // category === CATEGORY_TYPE.TREE_STRUCTURE 是树形结构，需要按 title 分组
+      if (entryInfoDetail.category_id === CATEGORY_TYPE.TREE_STRUCTURE && entryInfoDetail.entrys) {
         const collectionObj: Record<string, CollectionItem> = {}
         let preTitle = ''
 
@@ -78,7 +79,7 @@ export default function FillForm() {
         const result: CollectionItem[] = Object.values(collectionObj)
         setCollectionList(result)
       } else if (entryInfoDetail.entrys) {
-        // category === 3 或其他，使用平铺的 checkbox 列表
+        // category === CATEGORY_TYPE.CHECKBOX_LIST 或其他，使用平铺的 checkbox 列表
         setCheckList(entryInfoDetail.entrys)
       }
     }

@@ -1,4 +1,5 @@
 import { Form, Checkbox, Tree } from 'antd'
+import { CATEGORY_TYPE } from '@/types/api'
 import type { Entry } from '@/types/api'
 
 interface CollectionItem {
@@ -23,8 +24,8 @@ export const SymptomSelector = ({
   onCheckedChange,
   onNodeCheck,
 }: Props) => {
-  // category === 3: checkbox 列表形式
-  if (category === 3 && checkList.length > 0) {
+  // category === CATEGORY_TYPE.CHECKBOX_LIST: checkbox 列表形式
+  if (category === CATEGORY_TYPE.CHECKBOX_LIST && checkList.length > 0) {
     return (
       <Form.Item
         label="症状"
@@ -46,8 +47,8 @@ export const SymptomSelector = ({
     )
   }
 
-  // category === 6: 树形结构形式
-  if (category === 6 && collectionList.length > 0) {
+  // category === CATEGORY_TYPE.TREE_STRUCTURE: 树形结构形式
+  if (category === CATEGORY_TYPE.TREE_STRUCTURE && collectionList.length > 0) {
     return (
       <Form.Item
         label="症状"
