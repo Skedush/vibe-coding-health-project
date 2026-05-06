@@ -66,9 +66,8 @@ const createMutationHook =
     useMutation<TData, Error, TVariables>({ mutationFn })
 
 // 工厂函数 - 简化 query hook 创建
-// 注意：params 必须有默认值以支持无参数调用
 const createQueryHook =
-  <TData, TParams extends object = {}>(
+  <TData, TParams extends object = Record<string, never>>(
     queryFn: (params: TParams) => Promise<TData>,
     queryKey: string[]
   ) =>
