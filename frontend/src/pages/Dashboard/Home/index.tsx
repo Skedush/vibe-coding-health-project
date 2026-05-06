@@ -1,19 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { List, Tabs, Button, Input, Modal, message, Checkbox, Affix } from 'antd'
+import { Tabs, Button, Input, Modal, message, Affix } from 'antd'
 import { PageContainer } from '@/components/PageContainer'
-import { DeleteOutlined, EyeOutlined, LinkOutlined } from '@ant-design/icons'
 import { useEntryInfoList, useUserEntryList, useDeleteUserEntry } from '@/api/request'
-import { useAuthStore } from '@/stores/authStore'
 import { useQueryClient } from '@tanstack/react-query'
-import type { EntryInfo, UserEntry } from '@/types/api'
+import type { EntryInfo } from '@/types/api'
+import { EntryInfoLinks } from './components/EntryInfoLinks'
+import { EntryList } from './components/EntryList'
+import { CompareButton } from './components/CompareButton'
+import { usePermission } from '@/hooks'
 
 const { Search } = Input
 
 export default function Home() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { user } = useAuthStore()
   const [selectedEntryInfo, setSelectedEntryInfo] = useState<string>('')
   const [searchParams, setSearchParams] = useState<{ page?: number; search?: string }>({})
   const [compareMode, setCompareMode] = useState(false)
@@ -26,8 +27,7 @@ export default function Home() {
   })
   const deleteMutation = useDeleteUserEntry()
 
-  const isStaff = user?.is_staff
-  const isSuperUser = user?.is_superuser
+  const { isStaff, canDelete } = usePermission()
 
   useEffect(() => {
     if (entryInfoList.length > 0 && !selectedEntryInfo) {
@@ -113,28 +113,7 @@ export default function Home() {
   return (
     <PageContainer>
       <div>
-      {isStaff && (
-        <div className="mb-4">
-          {entryInfoList.map((item: EntryInfo) => (
-            <div key={item.id} className="mb-2 flex items-center gap-2">
-              <span>{item.category_name}:</span>
-              <a href={`/dashboard/f/${item.id}`} target="_blank" rel="noopener noreferrer">
-                {`${window.location.origin}/dashboard/f/${item.id}`}
-              </a>
-              <Button
-                type="link"
-                icon={<LinkOutlined />}
-                onClick={() => {
-                  navigator.clipboard.writeText(`${window.location.origin}/dashboard/f/${item.id}`)
-                  message.success('链接已复制')
-                }}
-              >
-                复制
-              </Button>
-            </div>
-          ))}
-        </div>
-      )}
+      {isStaff && <EntryInfoLinks items={entryInfoList} />}
 
       {!isStaff && (
         <Button type="primary" onClick={handleNavForm} className="mb-4">
@@ -153,59 +132,16 @@ export default function Home() {
             key: item.id.toString(),
             label: item.category_name,
             children: (
-              <List
-                loading={isLoading}
-                dataSource={userEntryList || []}
-                renderItem={(record: UserEntry) => (
-                  <List.Item
-                    actions={[
-                      <Button
-                        key="detail"
-                        type="link"
-                        icon={<EyeOutlined />}
-                        onClick={() => navigate(`/dashboard/result/${record.id}`)}
-                      >
-                        查看
-                      </Button>,
-                      ...(isSuperUser || !isStaff
-                        ? [
-                            <Button
-                              key="delete"
-                              type="link"
-                              danger
-                              icon={<DeleteOutlined />}
-                              onClick={() => handleDelete(record.id)}
-                            >
-                              删除
-                            </Button>,
-                          ]
-                        : []),
-                    ]}
-                  >
-                    {compareMode && isStaff && (
-                      <Checkbox
-                        checked={checkedList.includes(record.id.toString())}
-                        onChange={(e) =>
-                          handleCheckboxChange(e.target.checked, record.id.toString())
-                        }
-                        className="mr-2"
-                      />
-                    )}
-                    {isStaff ? (
-                      <div className="flex justify-between w-full">
-                        <div>
-                          <a onClick={() => navigate(`/dashboard/result/${record.id}`)}>
-                            {record.name}
-                          </a>
-                        </div>
-                        <div>{record.phone}</div>
-                        <div>{record.created}</div>
-                      </div>
-                    ) : (
-                      <div>{record.created}</div>
-                    )}
-                  </List.Item>
-                )}
+              <EntryList
+                records={userEntryList || []}
+                isLoading={isLoading}
+                isStaff={isStaff}
+                compareMode={compareMode}
+                checkedList={checkedList}
+                onView={(id) => navigate(`/dashboard/result/${id}`)}
+                onDelete={handleDelete}
+                onCheckboxChange={handleCheckboxChange}
+                canDelete={canDelete}
               />
             ),
           }))}
@@ -214,9 +150,7 @@ export default function Home() {
 
       {isStaff && selectedEntryInfo && (
         <Affix className="fixed bottom-4 right-4 md:bottom-6 md:right-6">
-          <Button type="primary" onClick={handleCompare}>
-            {compareMode ? '取消对比' : '对比'}
-          </Button>
+          <CompareButton compareMode={compareMode} onClick={handleCompare} />
         </Affix>
       )}
     </div>
