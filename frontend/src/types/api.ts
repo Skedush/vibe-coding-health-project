@@ -168,18 +168,10 @@ export interface ResultInfo {
 }
 
 // ========== Result Groups ==========
-export interface CategorySimple {
-  id: number
-  name: string
-  link?: string
-  child_link?: string
-  protocol?: string
-  show_count?: number
-}
-
 export interface EntryForGroup {
   id: number
   title: string
+  remark?: string
   number?: number
 }
 
@@ -190,6 +182,34 @@ export interface EntryGroup {
 
 export interface ResultGroups {
   groups: EntryGroup[]
+}
+
+// ========== Graph Data ==========
+export interface GraphLink {
+  source: string
+  target: string
+  label?: { show?: boolean }
+  ignoreForceLayout?: boolean
+}
+
+export interface GraphNode {
+  id: string
+  name: string
+  category: number
+  value: string | number
+  symbolSize: number
+}
+
+export interface GraphCategory {
+  id: number
+  name: string
+  show_count?: number
+}
+
+export interface GraphData {
+  nodes: GraphNode[]
+  links: GraphLink[]
+  categories: GraphCategory[]
 }
 
 // ========== Result Compare ==========
