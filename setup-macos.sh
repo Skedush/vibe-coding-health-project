@@ -31,16 +31,24 @@ cat > ~/.docker/daemon.json << 'EOF'
 EOF
 echo -e "${GREEN}Docker 镜像配置完成${NC}"
 
-# 2. 检查 Docker
+# 2. 检查/安装 Docker
 echo -e "${YELLOW}[2/7] 检查 Docker...${NC}"
 if ! command -v docker &> /dev/null; then
-    echo -e "${RED}Docker 未安装！${NC}"
-    echo -e "${YELLOW}请先安装 Docker Desktop：${NC}"
-    echo "1. 打开 App Store"
-    echo "2. 搜索 \"Docker\""
-    echo "3. 点击安装 Docker Desktop"
-    echo "4. 安装完成后运行此脚本"
-    exit 1
+    echo -e "${YELLOW}Docker 未安装，尝试用 Homebrew 安装...${NC}"
+
+    # 检查 Homebrew
+    if ! command -v brew &> /dev/null; then
+        echo -e "${YELLOW}Homebrew 未安装，先安装 Homebrew...${NC}"
+        /bin/bash -c "$(curl -fsSL https://mirrors.tuna.tsinghua.edu.cn/install/brew.sh)"
+    fi
+
+    # 用 Homebrew 安装 Docker
+    echo -e "${YELLOW}安装 Docker Desktop...${NC}"
+    brew install --cask docker
+
+    echo -e "${YELLOW}请启动 Docker Desktop 后按回车继续${NC}"
+    echo -e "${YELLOW}提示：在 Launchpad 中找到 Docker 图标并点击启动${NC}"
+    read -p "Docker 启动后按回车继续: "
 fi
 echo -e "${GREEN}Docker 已安装${NC}"
 
