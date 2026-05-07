@@ -10,10 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
 
-    env:
-      DOCKER_BUILDKIT: 1
-      COMPOSE_DOCKER_CLI_BUILD: 1
-
     steps:
       - name: Deploy to server via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -25,6 +21,4 @@ jobs:
           script: |
             cd ${{ secrets.SSH_DEPLOY_PATH }}
             git pull origin main
-            docker buildx inspect default || true
-            docker-compose -f docker-compose.prod.yml --env-file .env.production build --parallel
-            docker-compose -f docker-compose.prod.yml --env-file .env.production up -d --remove-orphans
+            docker-compose -f docker-compose.prod.yml --env-file .env.production up -d --build --remove-orphans
