@@ -279,8 +279,6 @@ JWT_SECRET_KEY=jwt-secret-key-change-in-production
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=480  # 8小时
 REFRESH_TOKEN_EXPIRE_MINUTES=1440  # 24小时
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=admin123
 ```
 
 ### 前端 (.env.development)

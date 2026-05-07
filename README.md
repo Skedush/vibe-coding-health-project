@@ -601,9 +601,6 @@ JWT_SECRET_KEY=your-jwt-secret-key-min-32-characters-long
 ACCESS_TOKEN_EXPIRE_MINUTES=480   # 8小时
 REFRESH_TOKEN_EXPIRE_MINUTES=1440  # 24小时
 
-# 管理员账号
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=admin123
 ```
 
 ### 前端 (.env.development)
