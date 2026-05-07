@@ -109,6 +109,9 @@ if [ "$ENVIRONMENT" = "prod" ]; then
         MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-$(openssl rand -base64 24 | tr -dc 'a-zA-Z0-9' | head -c 16)}
         sed -i "s/^MYSQL_ROOT_PASSWORD=.*/MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD/" "$ENV_FILE"
 
+        # 更新 DATABASE_URL 中的密码
+        sed -i "s|mysql+pymysql://root:.*@db:3306/health|mysql+pymysql://root:$MYSQL_ROOT_PASSWORD@db:3306/health|" "$ENV_FILE"
+
         read -p "SECRET_KEY [随机生成]: " SECRET_KEY
         SECRET_KEY=${SECRET_KEY:-$(openssl rand -base64 32)}
         sed -i "s/^SECRET_KEY=.*/SECRET_KEY=$SECRET_KEY/" "$ENV_FILE"
@@ -117,10 +120,9 @@ if [ "$ENVIRONMENT" = "prod" ]; then
         JWT_SECRET_KEY=${JWT_SECRET_KEY:-$(openssl rand -base64 32)}
         sed -i "s/^JWT_SECRET_KEY=.*/JWT_SECRET_KEY=$JWT_SECRET_KEY/" "$ENV_FILE"
 
-        read -p "前端 API 地址 (VITE_API_BASE_URL): " VITE_API_BASE_URL
-        if [ -n "$VITE_API_BASE_URL" ]; then
-            sed -i "s|^VITE_API_BASE_URL=.*|VITE_API_BASE_URL=$VITE_API_BASE_URL|" "$ENV_FILE"
-        fi
+        read -p "前端 API 地址 (VITE_API_BASE_URL) [https://health.zzzxc.com]: " VITE_API_BASE_URL
+        VITE_API_BASE_URL=${VITE_API_BASE_URL:-https://health.zzzxc.com}
+        sed -i "s|^VITE_API_BASE_URL=.*|VITE_API_BASE_URL=$VITE_API_BASE_URL|" "$ENV_FILE"
 
         echo -e "${GREEN}.env.production 已创建${NC}"
         echo -e "${YELLOW}重要：请记住密码，或查看 $ENV_FILE${NC}"
@@ -131,26 +133,25 @@ if [ "$ENVIRONMENT" = "prod" ]; then
 
     COMPOSE_FILE="docker-compose.prod.yml"
 else
-    ENV_FILE="$PROJECT_PATH/backend/.env"
+    ENV_FILE="$PROJECT_PATH/.env"
     if [ -f "$ENV_FILE" ]; then
         echo -e "${YELLOW}.env 文件已存在，跳过创建${NC}"
     else
         echo -e "${YELLOW}创建 .env 文件...${NC}"
         cat > "$ENV_FILE" << 'EOF'
-# 数据库配置
-DATABASE_URL=mysql+pymysql://root:root@db:3306/health
+# MySQL 配置
+MYSQL_ROOT_PASSWORD=root
+MYSQL_DATABASE=health
 
-# 安全配置（开发环境）
+# 后端配置
+DATABASE_URL=mysql+pymysql://root:root@db:3306/health
 SECRET_KEY=dev-secret-key
 JWT_SECRET_KEY=dev-jwt-secret-key
-
-# Token 过期时间（分钟）
 ACCESS_TOKEN_EXPIRE_MINUTES=480
 REFRESH_TOKEN_EXPIRE_MINUTES=1440
 
-# 管理员账号
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=admin123
+# 前端配置
+VITE_API_BASE_URL=http://localhost:8000
 EOF
         echo -e "${GREEN}.env 文件已创建${NC}"
     fi
@@ -176,15 +177,14 @@ echo -e "${GREEN}=== 部署完成 ===${NC}"
 echo ""
 echo "访问地址："
 if [ "$ENVIRONMENT" = "prod" ]; then
-    echo "  - 前端: http://localhost:80"
+    echo "  - 前端: http://localhost:3001"
+    echo "  - 后端 API: http://localhost:8001"
+    echo "  - API 文档: http://localhost:8001/docs"
 else
     echo "  - 前端: http://localhost:3001"
+    echo "  - 后端 API: http://localhost:8000"
+    echo "  - API 文档: http://localhost:8000/docs"
 fi
-echo "  - 后端 API: http://localhost:8000"
-echo "  - API 文档: http://localhost:8000/docs"
-echo "  - Admin: http://localhost:8000/admin"
-echo ""
-echo -e "${YELLOW}管理后台账号: admin / admin123${NC}"
 echo ""
 echo "常用命令："
 echo "  查看日志: docker-compose -f $COMPOSE_FILE logs -f"
