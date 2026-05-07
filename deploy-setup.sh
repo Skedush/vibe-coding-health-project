@@ -46,7 +46,7 @@ fi
 echo -e "${YELLOW}[1/7] 检查 Docker 环境...${NC}"
 if ! command -v docker &> /dev/null; then
     echo -e "${RED}Docker 未安装，正在安装...${NC}"
-    apt-get update && apt-get install -y docker.io docker-compose
+    apt-get update && apt-get install -y docker.io docker-compose-v2
     systemctl start docker
     systemctl enable docker
 else
@@ -166,11 +166,11 @@ git config --global user.email "deploy@server"
 
 # 8. 构建并启动容器
 echo -e "${YELLOW}[7/7] 构建并启动 Docker 容器${NC}"
-docker-compose -f "$COMPOSE_FILE" up -d --build
+docker compose -f "$COMPOSE_FILE" up -d --build
 
 # 9. 检查容器状态
 echo -e "${YELLOW}检查容器状态...${NC}"
-docker-compose -f "$COMPOSE_FILE" ps
+docker compose -f "$COMPOSE_FILE" ps
 
 echo ""
 echo -e "${GREEN}=== 部署完成 ===${NC}"
@@ -187,7 +187,7 @@ else
 fi
 echo ""
 echo "常用命令："
-echo "  查看日志: docker-compose -f $COMPOSE_FILE logs -f"
-echo "  重启服务: docker-compose -f $COMPOSE_FILE restart"
-echo "  停止服务: docker-compose -f $COMPOSE_FILE down"
-echo "  更新部署: cd $PROJECT_PATH && git pull && docker-compose -f $COMPOSE_FILE up -d --build"
+echo "  查看日志: docker compose -f $COMPOSE_FILE logs -f"
+echo "  重启服务: docker compose -f $COMPOSE_FILE restart"
+echo "  停止服务: docker compose -f $COMPOSE_FILE down"
+echo "  更新部署: cd $PROJECT_PATH && git pull && docker compose -f $COMPOSE_FILE up -d --build"
