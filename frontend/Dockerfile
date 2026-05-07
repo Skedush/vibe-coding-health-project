@@ -14,18 +14,20 @@ RUN npm install -g pnpm && pnpm install
 
 COPY . .
 
-# 构建（Vite 会读取 ENV 环境变量）
+# 构建
 RUN pnpm build
 
-# 运行阶段 - nginx
-FROM nginx:alpine
+# 运行阶段
+FROM node:18-alpine
+
+WORKDIR /app
+
+# 全局安装 serve
+RUN npm install -g serve
 
 # 复制构建产物
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/dist ./dist
 
-# 复制 nginx 配置
-COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 3001
 
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["serve", "-s", "dist", "-l", "3001"]
