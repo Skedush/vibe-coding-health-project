@@ -117,8 +117,13 @@ if [ "$ENVIRONMENT" = "prod" ]; then
         JWT_SECRET_KEY=${JWT_SECRET_KEY:-$(openssl rand -base64 32)}
         sed -i "s/^JWT_SECRET_KEY=.*/JWT_SECRET_KEY=$JWT_SECRET_KEY/" "$ENV_FILE"
 
+        read -p "前端 API 地址 (VITE_API_BASE_URL): " VITE_API_BASE_URL
+        if [ -n "$VITE_API_BASE_URL" ]; then
+            sed -i "s|^VITE_API_BASE_URL=.*|VITE_API_BASE_URL=$VITE_API_BASE_URL|" "$ENV_FILE"
+        fi
+
         echo -e "${GREEN}.env.production 已创建${NC}"
-        echo -e "${YELLOW}重要：请记住以下密码，或查看 $ENV_FILE${NC}"
+        echo -e "${YELLOW}重要：请记住密码，或查看 $ENV_FILE${NC}"
     else
         echo -e "${RED}找不到 .env.production.example 文件！${NC}"
         exit 1
