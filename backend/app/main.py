@@ -5,6 +5,7 @@ from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.responses import JSONResponse, FileResponse
 from app.core.database import engine, Base
 from app.core.config import get_settings
+from app.core.exceptions import setup_exception_handlers
 from app.api.routers import (
     auth_router, users_router, categories_router, entries_router,
     titles_router, user_entry_info_router, user_entry_router, results_router
@@ -25,6 +26,9 @@ app = FastAPI(
     redoc_url=None,
     openapi_url="/api/openapi.json",
 )
+
+# 配置全局异常处理
+setup_exception_handlers(app)
 
 # 注册路由
 app.include_router(auth_router)
@@ -68,7 +72,7 @@ async def redoc_html():
     return get_redoc_html(
         openapi_url=app.openapi_url,
         title="健康管理系统 API - ReDoc",
-        redoc_js_url="https://cdn.bootcdn.net/ajax/libs/redoc/2.1.4/redoc.min.js",
+        redoc_js_url="https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js",
     )
 
 @app.get("/api", include_in_schema=False)

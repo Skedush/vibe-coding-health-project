@@ -13,7 +13,10 @@ router = APIRouter(prefix="/entry", tags=["条目"])
 def list_entries(
     db: Session = Depends(get_db)
 ):
-    """获取条目列表（公开）"""
+    """
+    获取条目列表（公开）
+    老项目: EntryViewset.list - 无需登录（permission_classes 被注释）
+    """
     entries = db.query(Entry).filter(Entry.is_delete == False).all()
     return entries
 
@@ -23,7 +26,10 @@ def create_entry(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """创建条目（需认证）"""
+    """
+    创建条目（需认证）
+    老项目: EntryViewset.create
+    """
     entry = Entry(**entry_data.model_dump())
     db.add(entry)
     db.commit()
@@ -35,7 +41,10 @@ def get_entry(
     entry_id: int,
     db: Session = Depends(get_db)
 ):
-    """获取条目详情（公开）"""
+    """
+    获取条目详情（公开）
+    老项目: EntryViewset.retrieve - 无需登录
+    """
     entry = db.query(Entry).filter(
         Entry.id == entry_id,
         Entry.is_delete == False
@@ -51,7 +60,10 @@ def update_entry(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """更新条目（需认证）"""
+    """
+    更新条目（需认证）
+    老项目: EntryViewset.update
+    """
     entry = db.query(Entry).filter(Entry.id == entry_id).first()
     if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")
@@ -67,7 +79,10 @@ def delete_entry(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """删除条目（需认证）"""
+    """
+    删除条目（需认证）
+    老项目: EntryViewset.destroy
+    """
     entry = db.query(Entry).filter(Entry.id == entry_id).first()
     if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")

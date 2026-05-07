@@ -1,0 +1,14 @@
+{
+  "extends": [
+    "stylelint-config-standard",
+    "stylelint-config-recess-order",
+    "stylelint-config-tailwindcss"
+  ],
+  "plugins": ["stylelint-prettier"],
+  "rules": {
+    "prettier/prettier": true,
+    "no-empty-source": null,
+    "selector-class-pattern": "^[a-z][a-zA-Z0-9]*(-[a-z]+)*(__[a-z0-9]+(-[a-z0-9]+)*)?(--[a-z0-9]+(-[a-z0-9]+)*)?$",
+    "keyframes-name-pattern": "^[a-z][a-z0-9]*(-[a-z]+)*$"
+  }
+}

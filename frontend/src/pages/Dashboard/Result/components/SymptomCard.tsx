@@ -58,8 +58,9 @@ export function SymptomCard({ group, index, onPieClick, onGraphClick }: SymptomC
       <div className="flex flex-wrap">
         {entrys
           .filter((e) => {
-            if (e.number === undefined) return true
-            return (e.number ?? 0) > (category.show_count ?? 0)
+            // null 或 undefined 都视为顶级条目，直接展示
+            if (e.number == null) return true
+            return e.number > (category.show_count ?? 0)
           })
           .map((entry) => (
             <div

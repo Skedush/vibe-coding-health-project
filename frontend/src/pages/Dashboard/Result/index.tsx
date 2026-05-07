@@ -1,55 +1,100 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
-import { Card, Spin, Modal, Button, message } from 'antd'
+import { Card, Spin, Modal, Button } from 'antd'
 import { useResultInfo, useResultGroups } from '@/api/request'
-import { useAuthStore } from '@/stores/authStore'
+import { usePermission, useShareImage } from '@/hooks'
 import { PageContainer } from '@/components/PageContainer'
+import { ShareModal } from '@/components/ShareModal'
 import { BasicInfo } from './components/BasicInfo'
 import { SuggestionForm } from './components/SuggestionForm'
 import { SymptomCard } from './components/SymptomCard'
 import { PieChart } from './components/PieChart'
 import { GraphChart } from './components/GraphChart'
 import type { EntryGroup } from '@/types/api'
-import domtoimage from 'dom-to-image'
+
+// 图表模态框状态类型
+interface ChartModalState {
+  type: 'pie' | 'graph' | null
+  data?: EntryGroup
+}
 
 export default function Result() {
   const { id } = useParams<{ id: string }>()
-  const { user } = useAuthStore()
+  const { isStaff } = usePermission()
   const { data: resultInfo, isLoading: infoLoading, refetch } = useResultInfo(Number(id))
   const { data: resultGroups, isLoading: groupsLoading } = useResultGroups(Number(id))
-  const isLoading = infoLoading || groupsLoading
   const resultRef = useRef<HTMLDivElement>(null)
 
-  const [pieModalVisible, setPieModalVisible] = useState(false)
-  const [graphModalVisible, setGraphModalVisible] = useState(false)
-  const [imgModalVisible, setImgModalVisible] = useState(false)
-  const [selectedPieData, setSelectedPieData] = useState<EntryGroup | null>(null)
-  const [picture, setPicture] = useState('')
+  // 图表模态框状态管理
+  const [chartModal, setChartModal] = useState<ChartModalState>({
+    type: null,
+    data: undefined,
+  })
 
-  const showPieModal = (group: EntryGroup) => {
-    setSelectedPieData(group)
-    setPieModalVisible(true)
-  }
+  const showPieModal = useCallback((group: EntryGroup) => {
+    setChartModal({ type: 'pie', data: group })
+  }, [])
 
-  const showGraphModal = () => {
-    setGraphModalVisible(true)
-  }
+  const showGraphModal = useCallback(() => {
+    setChartModal({ type: 'graph' })
+  }, [])
 
-  const domToImage = async () => {
+  const hideChartModal = useCallback(() => {
+    setChartModal({ type: null })
+  }, [])
+
+  const { picture, isModalOpen, generateImage, downloadImage, closeModal } = useShareImage()
+
+  const isLoading = useMemo(() => infoLoading || groupsLoading, [infoLoading, groupsLoading])
+
+  const handleGenerateShareImage = useCallback(async () => {
     if (!resultRef.current) return
-    try {
-      const shareBtn = document.querySelector('.share-btn') as HTMLElement
-      if (shareBtn) shareBtn.style.display = 'none'
-      const dataUrl = await domtoimage.toJpeg(resultRef.current, { quality: 1 })
-      if (shareBtn) shareBtn.style.display = ''
-      setPicture(dataUrl)
-      setImgModalVisible(true)
-    } catch {
-      message.error('生成分享图片失败')
-    }
-  }
+    const shareBtn = document.querySelector('.share-btn') as HTMLElement
+    if (shareBtn) shareBtn.style.display = 'none'
+    await generateImage(resultRef.current)
+    if (shareBtn) shareBtn.style.display = ''
+  }, [resultRef, generateImage])
 
-  const isStaff = user?.is_staff
+  const handleDownloadImage = useCallback(() => {
+    downloadImage(`健康报告_${new Date().toLocaleDateString()}.jpg`)
+  }, [downloadImage])
+
+  const renderRemarkCard = useMemo(() => {
+    if (!resultInfo?.remark && !resultInfo?.suggestion) return null
+    return (
+      <Card title="备注与意见" size="small" className="mt-4">
+        {resultInfo.remark && (
+          <div className="mb-2">
+            <b>备注：</b>
+            {resultInfo.remark}
+          </div>
+        )}
+        {resultInfo.suggestion && (
+          <div className="text-green-600 font-bold whitespace-pre-wrap">
+            <b>参考意见：</b>
+            {resultInfo.suggestion}
+          </div>
+        )}
+      </Card>
+    )
+  }, [resultInfo?.remark, resultInfo?.suggestion])
+
+  const renderHealthAnalysis = useMemo(() => {
+    if (!resultGroups?.groups?.length) return null
+    return (
+      <Card title="健康分析" size="small" className="mt-4">
+        {resultGroups.groups.map((group, index) => (
+          <SymptomCard
+            key={group.category.id}
+            group={group}
+            index={index}
+            onPieClick={() => showPieModal(group)}
+            onGraphClick={showGraphModal}
+          />
+        ))}
+      </Card>
+    )
+  }, [resultGroups?.groups, showPieModal, showGraphModal])
 
   if (isLoading) {
     return <Spin tip="分析中，稍等5-10秒..." />
@@ -64,78 +109,48 @@ export default function Result() {
       <div ref={resultRef}>
         <BasicInfo result={resultInfo} isStaff={isStaff} />
 
-        {(resultInfo.remark || resultInfo.suggestion) && (
-          <Card title="备注与意见" size="small" className="mt-4">
-            {resultInfo.remark && (
-              <div className="mb-2">
-                <b>备注：</b>{resultInfo.remark}
-              </div>
-            )}
-            {resultInfo.suggestion && (
-              <div className="text-green-600 font-bold whitespace-pre-wrap">
-                <b>参考意见：</b>{resultInfo.suggestion}
-              </div>
-            )}
-          </Card>
-        )}
+        {renderRemarkCard}
 
         <SuggestionForm result={resultInfo} onSuccess={refetch} />
 
-        {resultGroups?.groups && resultGroups.groups.length > 0 && (
-          <Card title="健康分析" size="small" className="mt-4">
-            {resultGroups.groups.map((group, index) => (
-              <SymptomCard
-                key={group.category.id}
-                group={group}
-                index={index}
-                onPieClick={() => showPieModal(group)}
-                onGraphClick={showGraphModal}
-              />
-            ))}
-          </Card>
-        )}
+        {renderHealthAnalysis}
 
         <div className="text-center mt-4 share-btn">
-          <Button onClick={domToImage}>分享</Button>
+          <Button onClick={handleGenerateShareImage}>分享</Button>
         </div>
       </div>
 
-      {/* 饼图弹窗 */}
       <Modal
-        title={`${selectedPieData?.category.name || ''}统计`}
-        open={pieModalVisible}
-        onCancel={() => setPieModalVisible(false)}
+        title={`${chartModal.data?.category.name || ''}统计`}
+        open={chartModal.type === 'pie'}
+        onCancel={hideChartModal}
         footer={null}
         width="80%"
         centered
+        destroyOnHidden
       >
-        {selectedPieData && <PieChart data={selectedPieData.entrys} />}
+        {chartModal.data && <PieChart data={chartModal.data.entrys} />}
       </Modal>
 
-      {/* 雷达图弹窗 */}
       <Modal
         title="总关系图"
-        open={graphModalVisible}
-        onCancel={() => setGraphModalVisible(false)}
+        open={chartModal.type === 'graph'}
+        onCancel={hideChartModal}
         footer={null}
         width="90%"
-        bodyStyle={{ height: '70vh' }}
         centered
+        destroyOnHidden
       >
         <GraphChart data={resultGroups?.groups || []} graphData={resultGroups?.graph} />
       </Modal>
 
-      {/* 图片弹窗 */}
-      <Modal
+      <ShareModal
+        open={isModalOpen}
+        picture={picture}
+        onClose={closeModal}
+        onDownload={handleDownloadImage}
         title="分享图片查看"
-        open={imgModalVisible}
-        onCancel={() => setImgModalVisible(false)}
-        footer={null}
-        width="80%"
-        centered
-      >
-        {picture && <img src={picture} alt="分享图片" className="w-full" />}
-      </Modal>
+      />
     </PageContainer>
   )
 }

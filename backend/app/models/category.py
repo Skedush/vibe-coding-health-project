@@ -18,3 +18,4 @@ class Category(Base):
     is_delete = Column(Boolean, default=False)
 
     entries = relationship("Entry", back_populates="category")
+    entry_infos = relationship("EntryInfo", back_populates="category")

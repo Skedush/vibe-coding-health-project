@@ -4,8 +4,12 @@ interface Props {
   namePrefix?: string
 }
 
+// 医学字段类型定义
+type MedicalField = 'age' | 'height' | 'weight' | 'waistline' | 'systolic_pressure' | 'diastolic_pressure' | 'blood_sugar'
+
 export const MedicalFields = ({ namePrefix = '' }: Props) => {
-  const suffixMap: Record<string, string> = {
+  // 字段后缀映射，使用严格类型
+  const suffixMap: Record<MedicalField, string> = {
     age: '',
     height: 'cm',
     weight: 'kg',
@@ -15,7 +19,8 @@ export const MedicalFields = ({ namePrefix = '' }: Props) => {
     blood_sugar: 'mmol/L',
   }
 
-  const labelMap: Record<string, string> = {
+  // 字段标签映射，使用严格类型
+  const labelMap: Record<MedicalField, string> = {
     age: '年龄',
     height: '身高',
     weight: '体重',
@@ -25,7 +30,16 @@ export const MedicalFields = ({ namePrefix = '' }: Props) => {
     blood_sugar: '血糖',
   }
 
-  const fields = ['age', 'height', 'weight', 'waistline', 'systolic_pressure', 'diastolic_pressure', 'blood_sugar'] as const
+  // 字段列表，按逻辑分组排列
+  const fields: MedicalField[] = [
+    'age',
+    'height',
+    'weight',
+    'waistline',
+    'systolic_pressure',
+    'diastolic_pressure',
+    'blood_sugar',
+  ]
 
   return (
     <div className="flex flex-wrap gap-4">
@@ -34,7 +48,7 @@ export const MedicalFields = ({ namePrefix = '' }: Props) => {
           key={field}
           name={namePrefix ? `${namePrefix}.${field}` : field}
           label={labelMap[field]}
-          className="flex-1 min-w-[45%]"
+          className="flex-1 min-w-[200px] sm:min-w-[45%]"
         >
           <Input placeholder={labelMap[field]} suffix={suffixMap[field]} />
         </Form.Item>

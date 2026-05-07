@@ -19,6 +19,8 @@ class UserUpdate(BaseModel):
 class UserResponse(UserBase):
     id: int
     is_active: bool
+    is_staff: bool
+    is_superuser: bool
     is_title: bool
     is_vip: bool
     is_delete: bool = False

@@ -27,14 +27,6 @@ class Entry(Base):
     is_delete = Column(Boolean, default=False)
 
     category = relationship("Category", back_populates="entries")
-    # 自关联：通过 Entryship 中间表关联到其他 Entry
-    entrys = relationship(
-        "Entry",
-        secondary=Entryship,
-        primaryjoin="Entry.id==Entryship.c.from_entry_id",
-        secondaryjoin="Entry.id==Entryship.c.to_entry_id",
-        backref="from_entries",
-    )
 
 class Title(Base):
     __tablename__ = "h_title"
@@ -47,3 +39,16 @@ class Title(Base):
     is_delete = Column(Boolean, default=False)
 
     user = relationship("User", back_populates="titles")
+    # Note: EntryInfo.title has back_populates="entry_infos" to complete the bidirectional link
+    entry_infos = relationship("EntryInfo", viewonly=True)
+
+
+# 配置 Entry 自关联关系（在类定义之后）
+Entry.entrys = relationship(
+    "Entry",
+    secondary=Entryship,
+    primaryjoin=Entryship.c.from_entry_id == Entry.id,
+    secondaryjoin=Entryship.c.to_entry_id == Entry.id,
+    backref="from_entries",
+    viewonly=True,
+)

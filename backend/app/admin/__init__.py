@@ -1,12 +1,59 @@
 from sqladmin import Admin, ModelView
+from sqladmin.authentication import AuthenticationBackend
+from starlette.requests import Request
+from starlette.responses import RedirectResponse
 from app.models.user import User
 from app.models.category import Category
 from app.models.entry import Entry, Title
-from app.models.user_entry import EntryInfo, UserEntry, UserEntryOfEntry
+from app.models.user_entry import EntryInfo, UserEntry
+from app.core.config import get_settings
+from app.core.database import SessionLocal
+import bcrypt
+
+settings = get_settings()
+
+
+class AdminAuth(AuthenticationBackend):
+    """管理后台认证 - 使用数据库用户"""
+
+    async def login(self, request: Request) -> bool:
+        form = await request.form()
+        username = form.get("username")
+        password = form.get("password")
+
+        db = SessionLocal()
+        try:
+            user = db.query(User).filter(
+                User.username == username,
+                User.is_superuser == True,
+                User.is_active == True
+            ).first()
+            if user and bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
+                request.session.update({"username": username})
+                return True
+        finally:
+            db.close()
+        return False
+
+    async def logout(self, request: Request) -> bool:
+        request.session.clear()
+        return True
+
+    async def authenticate(self, request: Request) -> bool:
+        username = request.session.get("username")
+        if not username:
+            return False
+        return True
+
 
 def register_admin(app, engine):
     """注册 SQLAdmin 管理后台"""
-    admin = Admin(app=app, engine=engine, title="健康管理系统 - 管理后台")
+    admin = Admin(
+        app=app,
+        engine=engine,
+        title="健康管理系统 - 管理后台",
+        authentication_backend=AdminAuth(secret_key=settings.SECRET_KEY),
+    )
 
     # 用户管理
     class UserAdmin(ModelView, model=User):
@@ -18,6 +65,7 @@ def register_admin(app, engine):
             User.phone: "手机号",
             User.gender: "性别",
             User.is_active: "已激活",
+            User.is_superuser: "超级管理员",
             User.is_staff: "企业用户",
             User.is_vip: "VIP",
             User.is_title: "有标题",
@@ -77,6 +125,7 @@ def register_admin(app, engine):
             EntryInfo.title_id: "标题ID",
             EntryInfo.is_delete: "已删除",
         }
+        foreign_key_list = [EntryInfo.category_id, EntryInfo.title_id]
 
     # 用户健康记录管理
     class UserEntryAdmin(ModelView, model=UserEntry):
@@ -96,10 +145,6 @@ def register_admin(app, engine):
         column_searchable_list = [UserEntry.name, UserEntry.phone]
         can_delete = False
 
-    # 用户选择条目关联
-    class UserEntryOfEntryAdmin(ModelView, model=UserEntryOfEntry):
-        column_list = [UserEntryOfEntry.id, UserEntryOfEntry.user_entry_id, UserEntryOfEntry.entry_id]
-
     # 注册所有视图
     admin.add_view(UserAdmin)
     admin.add_view(CategoryAdmin)
@@ -107,6 +152,5 @@ def register_admin(app, engine):
     admin.add_view(TitleAdmin)
     admin.add_view(EntryInfoAdmin)
     admin.add_view(UserEntryAdmin)
-    admin.add_view(UserEntryOfEntryAdmin)
 
     return admin

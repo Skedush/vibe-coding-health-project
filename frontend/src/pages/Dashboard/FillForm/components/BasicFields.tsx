@@ -1,7 +1,5 @@
 import { Form, Input, Radio } from 'antd'
 
-const { TextArea } = Input
-
 export const BasicFields = () => {
   return (
     <>
@@ -10,19 +8,19 @@ export const BasicFields = () => {
         label="姓名"
         rules={[{ required: true, message: '请输入姓名' }]}
       >
-        <Input placeholder="姓名.必填" maxLength={50} />
+        <Input placeholder="请输入姓名" maxLength={50} />
       </Form.Item>
 
       <Form.Item
         name="phone"
-        label="ID"
-        rules={[{ required: true, message: '请输入ID' }]}
+        label="手机号"
+        rules={[{ required: true, message: '请输入手机号' }]}
       >
-        <Input placeholder="ID.必填" maxLength={50} />
+        <Input placeholder="请输入手机号" maxLength={50} />
       </Form.Item>
 
       <Form.Item name="address" label="地址">
-        <TextArea placeholder="地址" rows={2} />
+        <Input.TextArea placeholder="请输入地址" rows={2} />
       </Form.Item>
 
       <Form.Item

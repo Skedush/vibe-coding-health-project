@@ -82,6 +82,7 @@ export interface UserEntry {
   diastolic_pressure?: string
   blood_sugar?: string
   phone?: string
+  address?: string
   remark?: string
   suggestion?: string
   entry_ids?: number[]

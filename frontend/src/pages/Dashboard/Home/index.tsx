@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Tabs, Button, Input, Modal, message, Affix } from 'antd'
+import { Tabs, Button, Input, Modal, message } from 'antd'
 import { PageContainer } from '@/components/PageContainer'
 import { useEntryInfoList, useUserEntryList, useDeleteUserEntry } from '@/api/request'
 import { useQueryClient } from '@tanstack/react-query'
@@ -12,11 +12,17 @@ import { usePermission } from '@/hooks'
 
 const { Search } = Input
 
+/**
+ * 首页组件
+ * 展示表单列表和用户记录，支持搜索、对比、删除等操作
+ */
 export default function Home() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [selectedEntryInfo, setSelectedEntryInfo] = useState<string>('')
   const [searchParams, setSearchParams] = useState<{ page?: number; search?: string }>({})
+
+  // 对比模式状态管理
   const [compareMode, setCompareMode] = useState(false)
   const [checkedList, setCheckedList] = useState<string[]>([])
 
@@ -29,56 +35,28 @@ export default function Home() {
 
   const { isStaff, canDelete } = usePermission()
 
-  useEffect(() => {
-    if (entryInfoList.length > 0 && !selectedEntryInfo) {
-      setSelectedEntryInfo(entryInfoList[0].id.toString())
-    }
-  }, [entryInfoList, selectedEntryInfo])
-
-  const handleTabChange = (key: string) => {
-    setSelectedEntryInfo(key)
-    setCheckedList([])
-    setCompareMode(false)
-  }
-
-  const handleSearch = (value: string) => {
-    setSearchParams({ ...searchParams, search: value, page: 1 })
-  }
-
-  const handleDelete = (id: number) => {
-    Modal.confirm({
-      title: '确认删除',
-      content: '确定要删除这条记录吗？',
-      onOk: async () => {
-        try {
-          await deleteMutation.mutateAsync(id)
-          message.success('删除成功')
-          queryClient.invalidateQueries({ queryKey: ['userEntryList'] })
-        } catch {
-          message.error('删除失败')
-        }
-      },
-    })
-  }
-
-  const handleCompare = () => {
+  // 对比模式切换
+  const toggleCompareMode = useCallback(() => {
     if (checkedList.length === 2) {
       navigate(`/dashboard/compare/${selectedEntryInfo}/${checkedList[0]}/${checkedList[1]}`)
     } else {
-      setCompareMode(!compareMode)
+      setCompareMode((prev) => !prev)
       setCheckedList([])
     }
-  }
+  }, [checkedList, selectedEntryInfo, navigate])
 
-  const handleCheckboxChange = (checked: boolean, id: string) => {
-    if (checked) {
-      if (checkedList.length < 2) {
-        setCheckedList([...checkedList, id])
+  // 处理复选框变化
+  const handleCheckboxChange = useCallback((checked: boolean, id: string) => {
+    setCheckedList((prev) => {
+      if (checked) {
+        if (prev.length < 2) {
+          return [...prev, id]
+        }
+        return prev
       }
-    } else {
-      setCheckedList(checkedList.filter((item) => item !== id))
-    }
-  }
+      return prev.filter((item) => item !== id)
+    })
+  }, [])
 
   // 选中两个后自动跳转
   useEffect(() => {
@@ -87,7 +65,42 @@ export default function Home() {
     }
   }, [checkedList, selectedEntryInfo, navigate])
 
-  const handleNavForm = () => {
+  // 初始化选中第一个表单
+  useEffect(() => {
+    if (entryInfoList.length > 0 && !selectedEntryInfo) {
+      setSelectedEntryInfo(entryInfoList[0].id.toString())
+    }
+  }, [entryInfoList, selectedEntryInfo])
+
+  const handleTabChange = useCallback((key: string) => {
+    setSelectedEntryInfo(key)
+    setCompareMode(false)
+  }, [setCompareMode])
+
+  const handleSearch = useCallback((value: string) => {
+    setSearchParams((prev) => ({ ...prev, search: value, page: 1 }))
+  }, [])
+
+  const handleDelete = useCallback(
+    (id: number) => {
+      Modal.confirm({
+        title: '确认删除',
+        content: '确定要删除这条记录吗？',
+        onOk: async () => {
+          try {
+            await deleteMutation.mutateAsync(id)
+            message.success('删除成功')
+            queryClient.invalidateQueries({ queryKey: ['userEntryList'] })
+          } catch {
+            message.error('删除失败')
+          }
+        },
+      })
+    },
+    [deleteMutation, queryClient],
+  )
+
+  const handleNavForm = useCallback(() => {
     if (entryInfoList.length === 1) {
       navigate(`/dashboard/f/${entryInfoList[0].id}`)
     } else {
@@ -108,7 +121,7 @@ export default function Home() {
         ),
       })
     }
-  }
+  }, [entryInfoList, navigate])
 
   return (
     <PageContainer>
@@ -149,9 +162,9 @@ export default function Home() {
       )}
 
       {isStaff && selectedEntryInfo && (
-        <Affix className="fixed bottom-4 right-4 md:bottom-6 md:right-6">
-          <CompareButton compareMode={compareMode} onClick={handleCompare} />
-        </Affix>
+        <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50">
+          <CompareButton compareMode={compareMode} onClick={toggleCompareMode} />
+        </div>
       )}
     </div>
     </PageContainer>

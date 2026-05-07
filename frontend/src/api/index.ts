@@ -33,7 +33,7 @@ export default {
 
   // 结果
   getResult: 'GET /result/:id',
-  getResultInfo: 'GET /result/{id}/info',
-  getResultGroups: 'GET /result/{id}/groups',
-  getResultCompare: 'GET /result/{id}/compare',
+  getResultInfo: 'GET /result/:id/info',
+  getResultGroups: 'GET /result/:id/groups',
+  getResultCompare: 'GET /result/:id/compare',
 } as const

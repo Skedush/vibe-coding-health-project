@@ -25,6 +25,8 @@ class EntryInfo(Base):
     is_delete = Column(Boolean, default=False)
 
     user = relationship("User", back_populates="entry_infos")
+    category = relationship("Category", back_populates="entry_infos")
+    title = relationship("Title", back_populates="entry_infos")
 
 class UserEntry(Base):
     __tablename__ = "h_user_entry"
