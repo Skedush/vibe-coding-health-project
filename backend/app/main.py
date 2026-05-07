@@ -43,7 +43,11 @@ app.include_router(results_router)
 # CORS 配置
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3001", "http://localhost:80"],
+    allow_origins=[
+        "http://localhost:3001",
+        "http://localhost:80",
+        "https://health.zzzxc.com",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
