@@ -25,11 +25,7 @@ class Settings(BaseSettings):
     # Token 过期时间（分钟）
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480  # 8 hours
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
-    
-    # 管理员账号（仅用于初始化，生产环境建议通过数据库管理）
-    ADMIN_USERNAME: str = "admin"
-    ADMIN_PASSWORD: str = "admin123"
-    
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
