@@ -16,16 +16,10 @@ NC='\033[0m'
 echo -e "${GREEN}=== 物业助手健康管理系统 - macOS 一键部署 ===${NC}\n"
 
 # 1. 配置国内镜像源
-echo -e "${YELLOW}[1/8] 配置国内镜像源...${NC}"
-
-# Homebrew 镜像
-export HOMEBREW_API_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-api"
-export HOMEBREW_BREW_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git"
-export HOMEBREW_CORE_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git"
-export HOMEBREW_BOTTLE_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles"
+echo -e "${YELLOW}[1/7] 配置国内镜像源...${NC}"
 
 # Docker 镜像（阿里云）
-echo -e "${YELLOW}配置 Docker 阿里云镜像...${NC}"
+echo -e "${YELLOW}配置 Docker 镜像加速...${NC}"
 mkdir -p ~/.docker
 cat > ~/.docker/daemon.json << 'EOF'
 {
@@ -35,75 +29,47 @@ cat > ~/.docker/daemon.json << 'EOF'
   ]
 }
 EOF
+echo -e "${GREEN}Docker 镜像配置完成${NC}"
 
-# 2. 检查 Homebrew
-echo -e "${YELLOW}[2/8] 检查 Homebrew...${NC}"
-if ! command -v brew &> /dev/null; then
-    echo -e "${YELLOW}Homebrew 未安装，正在安装...${NC}"
-    /bin/bash -c "$(curl -fsSL https://mirrors.tuna.tsinghua.edu.cn/install/brew.sh)"
-else
-    echo -e "${GREEN}Homebrew 已安装${NC}"
-fi
-
-# 3. 安装 Docker
-echo -e "${YELLOW}[3/8] 检查 Docker...${NC}"
+# 2. 检查 Docker
+echo -e "${YELLOW}[2/7] 检查 Docker...${NC}"
 if ! command -v docker &> /dev/null; then
-    echo -e "${YELLOW}Docker 未安装，正在安装（请输入密码）...${NC}"
-    brew install --cask docker
-    echo -e "${YELLOW}请启动 Docker Desktop 后按回车继续${NC}"
-    echo -e "${YELLOW}提示：在 Launchpad 中找到 Docker 图标并点击启动${NC}"
-    read -p "Docker 启动后按回车继续: "
-else
-    echo -e "${GREEN}Docker 已安装${NC}"
+    echo -e "${RED}Docker 未安装！${NC}"
+    echo -e "${YELLOW}请先安装 Docker Desktop：${NC}"
+    echo "1. 打开 App Store"
+    echo "2. 搜索 \"Docker\""
+    echo "3. 点击安装 Docker Desktop"
+    echo "4. 安装完成后运行此脚本"
+    exit 1
 fi
+echo -e "${GREEN}Docker 已安装${NC}"
 
-# 重启 Docker 以应用镜像配置
-if [ -f ~/.docker/daemon.json ]; then
-    echo -e "${YELLOW}重启 Docker 以应用镜像配置...${NC}"
-    # macOS 上 Docker Desktop 需要手动重启
-fi
-
-# 4. 确认 Docker 运行
-echo -e "${YELLOW}[4/8] 确认 Docker 运行中...${NC}"
+# 3. 确认 Docker 运行
+echo -e "${YELLOW}[3/7] 确认 Docker 运行中...${NC}"
 while ! docker info &> /dev/null; do
-    echo -e "${RED}Docker 未运行，请启动 Docker Desktop 后按回车重试${NC}"
+    echo -e "${RED}Docker 未运行${NC}"
+    echo -e "${YELLOW}请启动 Docker Desktop 后按回车重试${NC}"
     read -p "按回车继续: "
 done
 echo -e "${GREEN}Docker 运行中${NC}"
 
-# 5. 克隆项目
-echo -e "${YELLOW}[5/8] 克隆项目${NC}"
-read -p "请输入 GitHub 仓库地址（或直接回车使用当前目录）: " REPO_URL
+# 4. 进入项目目录
+echo -e "${YELLOW}[4/7] 确认项目目录...${NC}"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
 
-if [ -z "$REPO_URL" ]; then
-    echo -e "${YELLOW}使用当前目录${NC}"
-    cd "$(dirname "$0")"
-else
-    # 如果 GitHub 慢，使用代理
-    read -p "GitHub 是否很慢？（回车跳过，或输入 y 使用镜像）: " USE_MIRROR
-    if [ "$USE_MIRROR" = "y" ]; then
-        REPO_URL=$(echo "$REPO_URL" | sed 's|https://github.com|https://mirror.gitee.com/github|g')
-        echo -e "${YELLOW}使用 Gitee 镜像: $REPO_URL${NC}"
-    fi
-
-    read -p "请输入项目目录名 [health-system]: " PROJECT_DIR
-    PROJECT_DIR=${PROJECT_DIR:-health-system}
-
-    if [ -d "$PROJECT_DIR" ]; then
-        echo -e "${YELLOW}项目已存在，进入目录${NC}"
-        cd "$PROJECT_DIR"
-    else
-        echo -e "${YELLOW}克隆项目到 $PROJECT_DIR ...${NC}"
-        git clone "$REPO_URL" "$PROJECT_DIR"
-        cd "$PROJECT_DIR"
-    fi
+if [ ! -f "docker-compose.yml" ]; then
+    echo -e "${RED}错误：找不到 docker-compose.yml${NC}"
+    echo "请确保在项目根目录运行此脚本"
+    exit 1
 fi
+echo -e "${GREEN}项目目录: $SCRIPT_DIR${NC}"
 
-# 6. 配置环境变量
-echo -e "${YELLOW}[6/8] 配置环境变量${NC}"
+# 5. 配置环境变量
+echo -e "${YELLOW}[5/7] 配置环境变量${NC}"
 
 if [ -f .env ]; then
-    echo -e "${YELLOW}.env 文件已存在，跳过创建${NC}"
+    echo -e "${YELLOW}.env 文件已存在，跳过${NC}"
 else
     echo -e "${YELLOW}创建 .env 文件...${NC}"
     cat > .env << 'EOF'
@@ -124,16 +90,16 @@ EOF
     echo -e "${GREEN}.env 文件已创建${NC}"
 fi
 
-# 7. 启动服务
-echo -e "${YELLOW}[7/8] 启动 Docker 服务${NC}"
+# 6. 启动服务
+echo -e "${YELLOW}[6/7] 启动 Docker 服务${NC}"
 docker compose up -d --build
 
 # 等待 MySQL 就绪
 echo -e "${YELLOW}等待 MySQL 启动...${NC}"
 sleep 15
 
-# 8. 导入数据库和创建管理员
-echo -e "${YELLOW}[8/8] 导入数据库和创建管理员...${NC}"
+# 7. 导入数据库和创建管理员
+echo -e "${YELLOW}[7/7] 导入数据库和创建管理员...${NC}"
 
 # 获取容器名
 CONTAINER_NAME=$(docker compose ps -q db 2>/dev/null | head -1)
@@ -206,4 +172,4 @@ echo "常用命令："
 echo "  查看日志: docker compose logs -f"
 echo "  重启服务: docker compose restart"
 echo "  停止服务: docker compose down"
-echo "  更新代码: git pull && docker compose up -d --build"
+echo "  重新构建: docker compose up -d --build"
