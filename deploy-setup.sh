@@ -4,8 +4,8 @@
 # 用于在服务器上部署项目
 #
 # 用法:
-#   ./deploy-setup.sh          # 交互式部署（选择环境）
-#   ./deploy-setup.sh --env prod   # 生产环境自动部署
+#   ./deploy-setup.sh --env prod   # 生产环境
+#   ./deploy-setup.sh              # 开发环境
 #
 
 set -e
@@ -94,18 +94,35 @@ echo -e "${YELLOW}[5/7] 配置环境变量${NC}"
 
 if [ "$ENVIRONMENT" = "prod" ]; then
     ENV_FILE="$PROJECT_PATH/.env.production"
+    ENV_EXAMPLE="$PROJECT_PATH/.env.production.example"
+
     if [ -f "$ENV_FILE" ]; then
         echo -e "${YELLOW}使用已有的 .env.production${NC}"
+    elif [ -f "$ENV_EXAMPLE" ]; then
+        echo -e "${YELLOW}从模板创建 .env.production...${NC}"
+        cp "$ENV_EXAMPLE" "$ENV_FILE"
+
+        # 交互式输入敏感配置
+        echo -e "${CYAN}请输入生产环境配置（直接回车使用随机值）：${NC}"
+
+        read -p "MySQL 密码 [随机生成]: " MYSQL_ROOT_PASSWORD
+        MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-$(openssl rand -base64 24 | tr -dc 'a-zA-Z0-9' | head -c 16)}
+        sed -i "s/^MYSQL_ROOT_PASSWORD=.*/MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD/" "$ENV_FILE"
+
+        read -p "SECRET_KEY [随机生成]: " SECRET_KEY
+        SECRET_KEY=${SECRET_KEY:-$(openssl rand -base64 32)}
+        sed -i "s/^SECRET_KEY=.*/SECRET_KEY=$SECRET_KEY/" "$ENV_FILE"
+
+        read -p "JWT_SECRET_KEY [随机生成]: " JWT_SECRET_KEY
+        JWT_SECRET_KEY=${JWT_SECRET_KEY:-$(openssl rand -base64 32)}
+        sed -i "s/^JWT_SECRET_KEY=.*/JWT_SECRET_KEY=$JWT_SECRET_KEY/" "$ENV_FILE"
+
+        echo -e "${GREEN}.env.production 已创建${NC}"
+        echo -e "${YELLOW}重要：请记住以下密码，或查看 $ENV_FILE${NC}"
     else
-        echo -e "${RED}生产环境需要配置文件！${NC}"
-        echo "请先创建 $ENV_FILE 文件"
+        echo -e "${RED}找不到 .env.production.example 文件！${NC}"
         exit 1
     fi
-
-    # 设置环境变量
-    set -a
-    source "$ENV_FILE"
-    set +a
 
     COMPOSE_FILE="docker-compose.prod.yml"
 else
@@ -118,9 +135,9 @@ else
 # 数据库配置
 DATABASE_URL=mysql+pymysql://root:root@db:3306/health
 
-# 安全配置（生产环境必须修改为安全的值）
-SECRET_KEY=dev-secret-key-change-in-production
-JWT_SECRET_KEY=dev-jwt-secret-key-change-in-production
+# 安全配置（开发环境）
+SECRET_KEY=dev-secret-key
+JWT_SECRET_KEY=dev-jwt-secret-key
 
 # Token 过期时间（分钟）
 ACCESS_TOKEN_EXPIRE_MINUTES=480
@@ -145,26 +162,7 @@ git config --global user.email "deploy@server"
 echo -e "${YELLOW}[7/7] 构建并启动 Docker 容器${NC}"
 docker-compose -f "$COMPOSE_FILE" up -d --build
 
-# 9. 初始化数据库（仅首次）
-if [ "$ENVIRONMENT" = "dev" ]; then
-    echo -e "${YELLOW}检查是否需要初始化数据库...${NC}"
-    sleep 10
-
-    # 检查数据库是否已有数据
-    DB_EXISTS=$(docker-compose -f "$COMPOSE_FILE" exec -T db mysql -uroot -proot health -sse "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'health'" 2>/dev/null || echo "0")
-
-    if [ "$DB_EXISTS" = "0" ] || [ -z "$DB_EXISTS" ]; then
-        echo -e "${YELLOW}初始化数据库...${NC}"
-        docker-compose -f "$COMPOSE_FILE" exec -T db mysql -uroot -proot health < h_category.sql
-        docker-compose -f "$COMPOSE_FILE" exec -T db mysql -uroot -proot health < h_entry.sql
-        docker-compose -f "$COMPOSE_FILE" exec -T db mysql -uroot -proot health < h_entry_ship.sql
-        echo -e "${GREEN}数据库初始化完成${NC}"
-    else
-        echo -e "${GREEN}数据库已有数据，跳过初始化${NC}"
-    fi
-fi
-
-# 10. 检查容器状态
+# 9. 检查容器状态
 echo -e "${YELLOW}检查容器状态...${NC}"
 docker-compose -f "$COMPOSE_FILE" ps
 
